@@ -1,0 +1,60 @@
+{
+  "name": "boilerplate",
+  "private": true,
+  "version": "0.0.1",
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "start": "concurrently --kill-others \"npm run start-backend\" \"npm run start-frontend\" \"npm run start-electron\"",
+    "start-backend": "cd backend && python main.py",
+    "start-frontend": "cd frontend && vite",
+    "start-electron": "electron --no-sandbox electron/main.cjs",
+    "build-frontend": "cd frontend && npm run build",
+    "build-backend": "cd backend && python setup.py build_exe",
+    "build-electron": "electron-builder --linux",
+    "build": "npm run clean && npm run build-frontend && npm run build-backend && npm run build-electron",
+    "clean": "rm -rf dist backend/build frontend/dist"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "vite": "^6.2.0",
+    "concurrently": "^9.1.2",
+    "electron-builder": "^23.6.0"
+  },
+  "build": {
+    "appId": "com.zazeez.boilerplate",
+    "productName": "Boilerplate",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/build/exe.linux-x86_64-3.11/",
+        "to": "backend",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "frontend/dist/",
+        "to": "frontend",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "assets",
+        "to": "assets",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  }
+}
