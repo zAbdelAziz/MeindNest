@@ -19,10 +19,12 @@ const DraggableWidget: React.FC<DraggableWidgetProps> = ({
 															 onDelete,
 															 onRename,
 														 }) => {
+	// Use both the value and its setter so that we can update the name.
+	const [name, setName] = useState(widgetName);
 	const [isEditing, setIsEditing] = useState(false);
-	const [name] = useState(widgetName);
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+	// When Save is clicked, call onRename with the new name.
 	const handleRename = () => {
 		if (onRename) {
 			onRename(name);
@@ -36,13 +38,25 @@ const DraggableWidget: React.FC<DraggableWidgetProps> = ({
 			{/* Header */}
 			<div className="p-1 flex items-center justify-between bg-slate-300/10 dark:bg-stone-900/10">
 				<div className="flex items-center flex-grow">
-					<div className="mr-2 text-2xl invisible group-hover:visible drag-handle">
+					{/* Drag handle: always present (with the drag-handle class) but only visibly opaque on hover */}
+					<div className="mr-2 text-2xl opacity-0 group-hover:opacity-100 drag-handle">
 						<MdDragIndicator className="cursor-move" />
 					</div>
-					<span>{name}</span>
+					{/* Show an input when editing; otherwise show the name */}
+					{isEditing ? (
+						<input
+							type="text"
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+							className="p-1 border rounded"
+						/>
+					) : (
+						<span>{name}</span>
+					)}
 				</div>
 				<div className="flex-none">
 					{isEditing ? (
+						// When editing, show Save/Cancel buttons
 						<div className="flex space-x-2">
 							<button onClick={handleRename} className="text-blue-500">
 								Save
@@ -52,6 +66,7 @@ const DraggableWidget: React.FC<DraggableWidgetProps> = ({
 							</button>
 						</div>
 					) : (
+						// Otherwise, show the dropdown actions (Rename/Delete)
 						<div className="invisible group-hover:visible">
 							<Dropdown
 								toggleIcon={<PiDotsThreeOutlineFill className="text-lg" />}
@@ -85,8 +100,8 @@ const DraggableWidget: React.FC<DraggableWidgetProps> = ({
 
 			<hr className="text-gray-500" />
 
-			{/* Content area with the custom class */}
-			<div className="flex-1 overflow-hidden  bg-zinc-200/15 dark:bg-neutral-800/10 p-2 group-hover:overflow-auto scrollbar [scrollbar-gutter:stable]">
+			{/* Content area */}
+			<div className="flex-1 overflow-hidden bg-zinc-200/15 dark:bg-neutral-800/10 p-2 group-hover:overflow-auto scrollbar [scrollbar-gutter:stable]">
 				{children}
 			</div>
 
