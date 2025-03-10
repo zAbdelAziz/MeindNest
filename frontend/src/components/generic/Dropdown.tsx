@@ -10,16 +10,18 @@ interface DropdownProps<T> {
 }
 
 function Dropdown<T>({ options, label, mainIcon, toggleIcon }: DropdownProps<T>) {
-  const { open, selected, setOpen, selectOption, dropdownRef } = useDropdown<T>(null);
+  const { open, setOpen, selectOption, dropdownRef } = useDropdown<T>(null);
 
   return (
     <div className="relative inline-block text-left" ref={dropdownRef}>
-      <button type="button" onClick={() => setOpen(!open)}
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
         className="inline-flex items-center justify-between w-full p-2 bg-zinc-200/30 dark:bg-neutral-800/30 text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-800 focus:outline-none"
       >
         <div className="flex items-center">
           {mainIcon && <span className="mr-2">{mainIcon}</span>}
-          <span>{selected ? selected.render() : label }</span>
+          <span>{label}</span>
         </div>
         <span>
           {toggleIcon ? (
@@ -36,7 +38,7 @@ function Dropdown<T>({ options, label, mainIcon, toggleIcon }: DropdownProps<T>)
         </span>
       </button>
       {open && (
-        <div className="origin-top-right absolute right-0 mt-2 shadow-lg bg-zinc-200 dark:bg-neutral-800 ring-1 ">
+        <div className="origin-top-right absolute right-0 mt-2 shadow-lg bg-zinc-200 dark:bg-neutral-800 ring-1 z-50">
           <div className="py-1">
             {options.map((option, index) => (
               <button
