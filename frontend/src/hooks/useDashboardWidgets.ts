@@ -34,8 +34,9 @@ export function useDashboardWidgets(dashboardId: string) {
     setLayout(dashboardId, updatedLayout);
   };
 
-  // Add a new widget with an id that combines the dashboard id and a unique timestamp.
-  const addWidget = (widgetType: WidgetType) => {
+
+  // Updated addWidget: accepts an optional options object containing a title.
+  const addWidget = (widgetType: WidgetType, options?: { title: string }) => {
     const mapping = widgetMappings[widgetType] || {
       defaultName: widgetType.toUpperCase(),
       defaultLayout: { w: 6, h: 4 },
@@ -45,9 +46,9 @@ export function useDashboardWidgets(dashboardId: string) {
     const newItem: WidgetLayout = {
       i: newId,
       widgetType,
-      widgetName: mapping.defaultName,
+      widgetName: options?.title || mapping.defaultName,
       x: 0,
-      y: Infinity, // y: Infinity pushes the widget to the bottom
+      y: Infinity, // pushes the widget to the bottom
       w: mapping.defaultLayout.w,
       h: mapping.defaultLayout.h,
     };
