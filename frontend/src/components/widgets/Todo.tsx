@@ -7,7 +7,7 @@ import '../../assets/css/widget.css';
 
 const TodoComponent: React.FC = () => {
   return (
-    <div className="widget bg-zinc-200/15 dark:bg-neutral-800/10">
+    <div className="widget">
       <p className="text-center">Chart Component</p>
     </div>
   );
