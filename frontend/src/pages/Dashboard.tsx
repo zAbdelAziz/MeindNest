@@ -5,30 +5,26 @@ import { WidthProvider } from 'react-grid-layout';
 import GridLayout from 'react-grid-layout';
 import { useDashboardWidgets, WidgetLayout } from '../hooks/useDashboardWidgets';
 import DraggableWidget from '../components/DraggableWidget';
-import ChartComponent from '../components/ChartComponent';
-import TableComponent from '../components/TableComponent';
+import { widgetMappings } from '../config/widgetMappings';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import Dropdown from "../components/generic/Dropdown.tsx";
+import {PiDotsThreeOutlineVertical} from "react-icons/pi";
+import {MdClose, MdEdit} from "react-icons/md";
 
 const ResponsiveGridLayout = WidthProvider(GridLayout);
 
-// Render a widget based on its type.
+// Render a widget by looking up its component from the mapping.
 const renderWidget = (
   widget: WidgetLayout,
   deleteWidget: (widgetId: string) => void,
   renameWidget: (widgetId: string, newName: string) => void
 ) => {
-  let content;
-  switch (widget.widgetType) {
-    case 'chart':
-      content = <ChartComponent />;
-      break;
-    case 'table':
-      content = <TableComponent />;
-      break;
-    default:
-      content = <div>Unknown Widget</div>;
-  }
+  const widgetConfig = widgetMappings[widget.widgetType];
+  const WidgetComponent = widgetConfig
+    ? widgetConfig.component
+    : () => <div>Unknown Widget</div>;
+
   return (
     <div key={widget.i}>
       <DraggableWidget
@@ -36,19 +32,15 @@ const renderWidget = (
         onDelete={() => deleteWidget(widget.i)}
         onRename={(newName: string) => renameWidget(widget.i, newName)}
       >
-        {content}
+        <WidgetComponent />
       </DraggableWidget>
     </div>
   );
 };
 
 const DashboardPage: React.FC = () => {
-  // Get the dashboard id from the route parameters.
   const { dashboardId } = useParams<{ dashboardId: string }>();
-  // Use a fallback id if none is provided.
   const instanceId = dashboardId || 'base-dashboard';
-
-  // Use the instanceId in the dashboard widgets hook.
   const { currentLayout, onLayoutChange, addWidget, deleteWidget, renameWidget } =
     useDashboardWidgets(instanceId);
 
@@ -56,18 +48,55 @@ const DashboardPage: React.FC = () => {
     <div className="p-4">
       {/* Controls for adding new widgets */}
       <div className="mb-4 flex justify-center space-x-4">
-        <button
-          className="px-4 py-2 bg-blue-500 text-white rounded"
-          onClick={() => addWidget('chart')}
-        >
-          Add Chart
-        </button>
-        <button
-          className="px-4 py-2 bg-green-500 text-white rounded"
-          onClick={() => addWidget('table')}
-        >
-          Add Table
-        </button>
+            <Dropdown toggleIcon={<PiDotsThreeOutlineVertical />}
+              options={[
+                      {
+                          value: { id: 1, name: 'Chart', icon: "", label: "Chart" },
+                          onSelect: () => addWidget('chart'),
+                          render: () => (<div className="flex items-center" title="Rename"><MdEdit /><span className="ml-1">Chart</span></div>),
+                      },
+                      {
+                        value: { id: 2, name: 'Table', icon: ""},
+                        onSelect: () => addWidget('table'),
+                        render: () => (<div className="flex items-center"><MdClose /><span className="ml-1">Table</span></div>),
+                      },
+                    {
+                        value: { id: 3, name: 'Todo', icon: ""},
+                        onSelect: () => addWidget('todo'),
+                        render: () => (<div className="flex items-center"><MdClose /><span className="ml-1">Todo</span></div>),
+                    },
+                  {
+                        value: { id: 4, name: 'Timeline', icon: ""},
+                        onSelect: () => addWidget('timeline'),
+                        render: () => (<div className="flex items-center"><MdClose /><span className="ml-1">Timeline</span></div>),
+                    },
+                  {
+                        value: { id: 5, name: 'Calendar', icon: ""},
+                        onSelect: () => addWidget('calendar'),
+                        render: () => (<div className="flex items-center"><MdClose /><span className="ml-1">Calendar</span></div>),
+                    },
+                  {
+                        value: { id: 6, name: 'Text', icon: ""},
+                        onSelect: () => addWidget('text'),
+                        render: () => (<div className="flex items-center"><MdClose /><span className="ml-1">Text</span></div>),
+                    },
+                  {
+                        value: { id: 7, name: 'Email', icon: ""},
+                        onSelect: () => addWidget('email'),
+                        render: () => (<div className="flex items-center"><MdClose /><span className="ml-1">Email</span></div>),
+                    },
+                  {
+                        value: { id: 3, name: 'File Explorer', icon: ""},
+                        onSelect: () => addWidget('fileExplorer'),
+                        render: () => (<div className="flex items-center"><MdClose /><span className="ml-1">File Explorer</span></div>),
+                    },
+                  {
+                        value: { id: 3, name: 'Diagram', icon: ""},
+                        onSelect: () => addWidget('diagram'),
+                        render: () => (<div className="flex items-center"><MdClose /><span className="ml-1">Diagram</span></div>),
+                    },
+                    ]}
+            />
       </div>
       <ResponsiveGridLayout
         className="layout"

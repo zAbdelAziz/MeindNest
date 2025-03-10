@@ -1,6 +1,7 @@
 import React from 'react';
+import '../../assets/css/widget.css';
 
-const TableComponent: React.FC = () => {
+const Table: React.FC = () => {
   return (
     <div className="widget bg-zinc-200/15 dark:bg-neutral-800/10">
       <p className="text-center">Table Component</p>
@@ -8,4 +9,4 @@ const TableComponent: React.FC = () => {
   );
 };
 
-export default TableComponent;
+export default Table;

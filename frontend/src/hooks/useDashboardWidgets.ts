@@ -1,24 +1,25 @@
 // src/hooks/useDashboardWidgets.ts
 import { useLayoutStore } from '../stores/useLayoutStore';
 import { Layout } from 'react-grid-layout';
+import { widgetMappings } from '../config/widgetMappings';
 
-export type WidgetType = 'chart' | 'table' | string;
+export type WidgetType = keyof typeof widgetMappings | string;
 
 export interface WidgetLayout extends Layout {
   widgetType: WidgetType;
   widgetName: string;
 }
 
-// A default layout if none is saved yet.
+// Optional: A default layout when none is saved yet.
 const defaultLayout: WidgetLayout[] = [
-  { i: '1', widgetType: 'chart', widgetName: 'CHART Widget', x: 0, y: 0, w: 6, h: 4 },
-  { i: '2', widgetType: 'table', widgetName: 'TABLE Widget', x: 6, y: 0, w: 6, h: 4 },
+  { i: 'base-dashboard-1', widgetType: 'chart', widgetName: 'Chart Widget', x: 0, y: 0, w: 6, h: 4 },
+  { i: 'base-dashboard-2', widgetType: 'table', widgetName: 'Table Widget', x: 6, y: 0, w: 6, h: 4 },
 ];
 
 export function useDashboardWidgets(dashboardId: string) {
   const { layouts, setLayout } = useLayoutStore();
   // @ts-ignore
-	const currentLayout: WidgetLayout[] = layouts[dashboardId] || defaultLayout;
+  const currentLayout: WidgetLayout[] = layouts[dashboardId] || defaultLayout;
 
   // When items are moved or resized, update the layout.
   const onLayoutChange = (layout: Layout[]) => {
@@ -27,34 +28,37 @@ export function useDashboardWidgets(dashboardId: string) {
       return {
         ...item,
         widgetType: existingItem ? existingItem.widgetType : 'chart',
-        widgetName: existingItem ? existingItem.widgetName : 'CHART',
+        widgetName: existingItem ? existingItem.widgetName : 'Chart Widget',
       } as WidgetLayout;
     });
     setLayout(dashboardId, updatedLayout);
   };
 
-  // Add a new widget with a unique id.
+  // Add a new widget with an id that combines the dashboard id and a unique timestamp.
   const addWidget = (widgetType: WidgetType) => {
-    const newId = Date.now().toString();
+    const mapping = widgetMappings[widgetType] || {
+      defaultName: widgetType.toUpperCase(),
+      defaultLayout: { w: 6, h: 4 },
+    };
+
+    const newId = `${dashboardId}-${Date.now()}`;
     const newItem: WidgetLayout = {
       i: newId,
       widgetType,
-      widgetName: `${widgetType.toUpperCase()}`,
+      widgetName: mapping.defaultName,
       x: 0,
-      y: Infinity,
-      w: 6,
-      h: 4,
+      y: Infinity, // y: Infinity pushes the widget to the bottom
+      w: mapping.defaultLayout.w,
+      h: mapping.defaultLayout.h,
     };
     setLayout(dashboardId, [...currentLayout, newItem]);
   };
 
-  // Delete a widget.
   const deleteWidget = (widgetId: string) => {
     const newLayout = currentLayout.filter((widget) => widget.i !== widgetId);
     setLayout(dashboardId, newLayout);
   };
 
-  // Rename a widget.
   const renameWidget = (widgetId: string, newName: string) => {
     const newLayout = currentLayout.map((widget) =>
       widget.i === widgetId ? { ...widget, widgetName: newName } : widget

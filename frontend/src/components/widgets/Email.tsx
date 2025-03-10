@@ -1,11 +1,11 @@
 // src/components/ChartComponent.tsx
 import React from 'react';
 
-import '../assets/css/widget.css';
+import '../../assets/css/widget.css';
 
 
 
-const ChartComponent: React.FC = () => {
+const EmailComponent: React.FC = () => {
   return (
     <div className="widget bg-zinc-200/15 dark:bg-neutral-800/10">
       <p className="text-center">Chart Component</p>
@@ -13,4 +13,4 @@ const ChartComponent: React.FC = () => {
   );
 };
 
-export default ChartComponent;
+export default EmailComponent;
