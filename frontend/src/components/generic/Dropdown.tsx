@@ -17,7 +17,7 @@ function Dropdown<T>({ options, label, mainIcon, toggleIcon }: DropdownProps<T>)
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="inline-flex items-center justify-between w-full p-2  text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-800 focus:outline-none"
+        className="inline-flex items-center justify-between w-full p-2  text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-800 focus:outline-none"
       >
         <div className="flex items-center">
           {mainIcon && <span className="mr-2">{mainIcon}</span>}
@@ -44,7 +44,7 @@ function Dropdown<T>({ options, label, mainIcon, toggleIcon }: DropdownProps<T>)
               <button
                 key={index}
                 onClick={() => selectOption(option)}
-                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-800"
+                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-300 dark:hover:bg-gray-800"
               >
                 {option.render()}
               </button>

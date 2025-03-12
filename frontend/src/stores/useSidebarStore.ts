@@ -11,8 +11,8 @@ export interface SidebarState {
 }
 
 const initialState: Omit<SidebarState, 'setSidebarWidth' | 'toggleSidebarWidth' | 'setDragging'> = {
-  sidebarWidth: 50,
-  sideBarExpanded: false,
+  sidebarWidth: 0,
+  sideBarExpanded: true,
   dragging: false,
 };
 

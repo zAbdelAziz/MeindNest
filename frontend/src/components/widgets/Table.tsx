@@ -4,20 +4,18 @@ import {
   useReactTable,
   getCoreRowModel,
   flexRender,
+  ColumnDef,
 } from '@tanstack/react-table';
-
 import { useTableStore, TableData } from '../../stores/useTableStore';
 import { useInitializeTable } from '../../hooks/widgets/table/useInitializeTable';
 import { useEditableCell } from '../../hooks/widgets/table/useEditableCell';
 import { useTableColumns } from '../../hooks/widgets/table/useTableColumns';
-
+import TableMenu from './tables/TableMenu';
 import '../../assets/css/widget.css';
-
 
 export interface TableComponentProps {
   widgetId: string;
 }
-
 
 const defaultTableData: TableData = {
   headers: ['Column 1', 'Column 2', 'Column 3'],
@@ -28,26 +26,19 @@ const defaultTableData: TableData = {
 };
 
 const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
-  const {setTableData } = useTableStore();
+  const { setTableData } = useTableStore();
 
-  // Initialize the table data.
+  // Initialize table data (or use default)
   const tableData = useInitializeTable(widgetId, defaultTableData);
 
-  // Manage editable cell state.
+  // Manage inline editing state
   const { editingCell, setEditingCell, editingValue, setEditingValue } = useEditableCell();
 
-  // Build table columns with editable header and cell logic.
-  const columns = useTableColumns({
-    tableData,
-    widgetId,
-    editingCell,
-    editingValue,
-    setEditingCell,
-    setEditingValue,
-    setTableData,
-  });
+  // New state for row and column selections.
+  const [selectedRows, setSelectedRows] = React.useState<number[]>([]);
+  const [selectedColumns, setSelectedColumns] = React.useState<number[]>([]);
 
-  // Convert rows (string arrays) into an array of objects for TanStack Table.
+  // Prepare data objects for TanStack Table from tableData.
   const data = React.useMemo(() => {
     return tableData.rows.map((row) => {
       const rowObj: Record<string, string> = {};
@@ -58,6 +49,62 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
     });
   }, [tableData]);
 
+  // Get column definitions for data columns (includes inline editing & column selection).
+  const dataColumns = useTableColumns({
+    tableData,
+    widgetId,
+    editingCell,
+    editingValue,
+    setEditingCell,
+    setEditingValue,
+    setTableData,
+    selectedColumns,
+    setSelectedColumns,
+  });
+
+  // Create a dedicated selection column for rows.
+  const selectionColumn: ColumnDef<Record<string, string>> = {
+    id: 'selection',
+    header: () => (
+      <input
+        type="checkbox"
+        checked={selectedRows.length === data.length && data.length > 0}
+        onChange={(e) => {
+          if (e.target.checked) {
+            setSelectedRows(data.map((_, idx) => idx));
+          } else {
+            setSelectedRows([]);
+          }
+        }}
+        onClick={(e) => e.stopPropagation()}
+      />
+    ),
+    cell: ({ row }) => {
+      const rowIndex = row.index;
+      return (
+        <input
+          type="checkbox"
+          checked={selectedRows.includes(rowIndex)}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedRows((prev) => [...prev, rowIndex]);
+            } else {
+              setSelectedRows((prev) => prev.filter((i) => i !== rowIndex));
+            }
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      );
+    },
+    size: 40,
+  };
+
+  // Merge the selection column with the rest of the data columns.
+  const columns: ColumnDef<Record<string, string>>[] = React.useMemo(() => {
+    return [selectionColumn, ...dataColumns];
+  }, [selectionColumn, dataColumns]);
+
+  // Build the TanStack Table instance.
   const tableInstance = useReactTable({
     data,
     columns,
@@ -65,33 +112,37 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
   });
 
   return (
-    <div className="h-full overflow-auto scrollbar">
-      <table className="min-w-full">
-        <thead>
-          {tableInstance.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id} className="p-1">
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {tableInstance.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="border p-1">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="widget group relative h-full">
+      {/* Top menu always rendered; buttons show on hover */}
+      <TableMenu selectedRows={selectedRows} selectedColumns={selectedColumns} />
+      <div className="h-max overflow-auto scrollbar">
+        <table className="min-w-full">
+          <thead>
+            {tableInstance.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th key={header.id} className="p-1">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {tableInstance.getRowModel().rows.map((row) => (
+              <tr key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="border p-1 hover:bg-gray-300 dark:hover:bg-gray-800">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
