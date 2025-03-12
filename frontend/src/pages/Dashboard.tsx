@@ -6,7 +6,7 @@ import GridLayout from 'react-grid-layout';
 
 import { useDashboardWidgets, WidgetLayout } from '../hooks/useDashboardWidgets';
 import DraggableWidget from '../components/DraggableWidget';
-import { widgetMappings } from '../config/widgetMappings.tsx';
+import { widgetMappings } from '../config/widgetMappings';
 import Dropdown from "../components/generic/Dropdown";
 
 // Import all modal components
@@ -29,10 +29,12 @@ import { LuListTodo, LuText, LuMail } from "react-icons/lu";
 
 const ResponsiveGridLayout = WidthProvider(GridLayout);
 
+// Updated renderWidget to pass the collapse state.
 const renderWidget = (
   widget: WidgetLayout,
   deleteWidget: (widgetId: string) => void,
-  renameWidget: (widgetId: string, newName: string) => void
+  renameWidget: (widgetId: string, newName: string) => void,
+  collapseWidget: (widgetId: string, collapsed: boolean) => void
 ) => {
   const widgetConfig = widgetMappings[widget.widgetType];
   const WidgetComponent = widgetConfig
@@ -40,12 +42,16 @@ const renderWidget = (
     : () => <div>Unknown Widget</div>;
 
   return (
-    <div key={widget.i}>
+    // Add the "collapsed" class if the widget is collapsed.
+    <div key={widget.i} className={widget.collapsed ? 'collapsed' : ''}>
       <DraggableWidget
         widgetName={widget.widgetName}
+        widgetId={widget.i}
+        collapsed={widget.collapsed || false}
         icon={widgetConfig?.icon}
         onDelete={() => deleteWidget(widget.i)}
         onRename={(newName: string) => renameWidget(widget.i, newName)}
+        onCollapse={collapseWidget}
       >
         {/* Pass widgetId prop to all widget components */}
         <WidgetComponent widgetId={widget.i} />
@@ -54,10 +60,11 @@ const renderWidget = (
   );
 };
 
+
 const DashboardPage: React.FC = () => {
   const { dashboardId } = useParams<{ dashboardId: string }>();
   const instanceId = dashboardId || 'base-dashboard';
-  const { currentLayout, onLayoutChange, addWidget, deleteWidget, renameWidget } =
+  const { currentLayout, onLayoutChange, addWidget, deleteWidget, renameWidget, collapseWidget } =
     useDashboardWidgets(instanceId);
 
   // State to manage which widget modal is open (if any)
@@ -179,7 +186,7 @@ const DashboardPage: React.FC = () => {
         draggableHandle=".drag-handle"
       >
         {currentLayout.map((widget) =>
-          renderWidget(widget, deleteWidget, renameWidget)
+          renderWidget(widget, deleteWidget, renameWidget, collapseWidget)
         )}
       </ResponsiveGridLayout>
 

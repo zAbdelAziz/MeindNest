@@ -1,19 +1,24 @@
 // src/components/TableComponent.tsx
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   useReactTable,
   getCoreRowModel,
-  ColumnDef,
   flexRender,
 } from '@tanstack/react-table';
+
 import { useTableStore, TableData } from '../../stores/useTableStore';
+import { useInitializeTable } from '../../hooks/widgets/table/useInitializeTable';
+import { useEditableCell } from '../../hooks/widgets/table/useEditableCell';
+import { useTableColumns } from '../../hooks/widgets/table/useTableColumns';
+
 import '../../assets/css/widget.css';
+
 
 export interface TableComponentProps {
   widgetId: string;
 }
 
-// Updated default table data with sample default cell values.
+
 const defaultTableData: TableData = {
   headers: ['Column 1', 'Column 2', 'Column 3'],
   rows: [
@@ -23,121 +28,24 @@ const defaultTableData: TableData = {
 };
 
 const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
-  const { tables, setTableData } = useTableStore();
+  const {setTableData } = useTableStore();
 
-  // Use the store data or default if not present.
-  const tableData: TableData = tables[widgetId] || defaultTableData;
+  // Initialize the table data.
+  const tableData = useInitializeTable(widgetId, defaultTableData);
 
-  // On mount, initialize the table data if needed.
-  useEffect(() => {
-    if (!tables[widgetId]) {
-      setTableData(widgetId, defaultTableData);
-    }
-  }, [tables, widgetId, setTableData]);
+  // Manage editable cell state.
+  const { editingCell, setEditingCell, editingValue, setEditingValue } = useEditableCell();
 
-  // State to track which cell is being edited.
-  // (row: -1 for header, otherwise row index in the original data)
-  const [editingCell, setEditingCell] = React.useState<{ row: number; col: number } | null>(null);
-  const [editingValue, setEditingValue] = React.useState<string>('');
-
-  // Build columns using the headers array.
-  const columns = React.useMemo<ColumnDef<Record<string, string>>[]>(() => {
-    return tableData.headers.map((header, colIndex) => ({
-      id: `col${colIndex}`,
-      accessorKey: `col${colIndex}`, // Tells TanStack Table where to find the value.
-      header: () => {
-        if (editingCell && editingCell.row === -1 && editingCell.col === colIndex) {
-          return (
-            <input
-              className="border-0 p-1 w-full"
-              value={editingValue}
-              onChange={(e) => setEditingValue(e.target.value)}
-              onBlur={() => {
-                setTableData(widgetId, (prev) => {
-                  const newHeaders = prev.headers.map((h, idx) =>
-                    idx === colIndex ? editingValue : h
-                  );
-                  return { ...prev, headers: newHeaders };
-                });
-                setEditingCell(null);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  setTableData(widgetId, (prev) => {
-                    const newHeaders = prev.headers.map((h, idx) =>
-                      idx === colIndex ? editingValue : h
-                    );
-                    return { ...prev, headers: newHeaders };
-                  });
-                  setEditingCell(null);
-                }
-              }}
-              autoFocus
-            />
-          );
-        }
-        return (
-          <div
-            onClick={() => {
-              setEditingCell({ row: -1, col: colIndex });
-              setEditingValue(header);
-            }}
-            className="cursor-pointer"
-          >
-            {header}
-          </div>
-        );
-      },
-      cell: (info) => {
-        const colIdx = colIndex;
-        const cellValue = info.getValue() as string;
-        const rowIndex = info.row.index;
-        if (editingCell && editingCell.row === rowIndex && editingCell.col === colIdx) {
-          return (
-            <input
-              className="p-0 w-full"
-              value={editingValue}
-              onChange={(e) => setEditingValue(e.target.value)}
-              onBlur={() => {
-                setTableData(widgetId, (prev) => {
-                  const newRows = prev.rows.map((row, idx) =>
-                    idx === rowIndex ? row.map((cell, cidx) => (cidx === colIdx ? editingValue : cell)) : row
-                  );
-                  return { ...prev, rows: newRows };
-                });
-                setEditingCell(null);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  setTableData(widgetId, (prev) => {
-                    const newRows = prev.rows.map((row, idx) =>
-                      idx === rowIndex ? row.map((cell, cidx) => (cidx === colIdx ? editingValue : cell)) : row
-                    );
-                    return { ...prev, rows: newRows };
-                  });
-                  setEditingCell(null);
-                }
-              }}
-              autoFocus
-            />
-          );
-        }
-        return (
-          <div
-            onClick={() => {
-              setEditingCell({ row: rowIndex, col: colIdx });
-              setEditingValue(cellValue);
-            }}
-            className="cursor-pointer p-0"
-          >
-            {cellValue}
-          </div>
-        );
-      },
-    }));
-  }, [tableData, editingCell, editingValue, setTableData, widgetId]);
+  // Build table columns with editable header and cell logic.
+  const columns = useTableColumns({
+    tableData,
+    widgetId,
+    editingCell,
+    editingValue,
+    setEditingCell,
+    setEditingValue,
+    setTableData,
+  });
 
   // Convert rows (string arrays) into an array of objects for TanStack Table.
   const data = React.useMemo(() => {

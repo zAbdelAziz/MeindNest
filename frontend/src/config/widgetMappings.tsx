@@ -14,11 +14,12 @@ import { FaChartPie, FaTable, FaTimeline, FaCalendarDays, FaFolderOpen, FaDiagra
 import { LuListTodo, LuText, LuMail } from 'react-icons/lu';
 
 export interface WidgetConfig {
-  component: React.FC;
+  component: React.FC<{ widgetId: string }>;
   defaultName: string;
-  defaultLayout: { w: number; h: number; minW?: number }; // add optional minW here
+  defaultLayout: { w: number; h: number; minW?: number };
   icon: React.ReactNode;
 }
+
 
 export const widgetMappings: Record<string, WidgetConfig> = {
   chart: {

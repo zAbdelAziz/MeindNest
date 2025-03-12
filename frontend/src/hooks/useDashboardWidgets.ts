@@ -8,8 +8,11 @@ export type WidgetType = keyof typeof widgetMappings | string;
 export interface WidgetLayout extends Layout {
   widgetType: WidgetType;
   widgetName: string;
-  // Optionally, react-grid-layout supports minW, maxW, etc.
   minW?: number;
+  // New properties to track collapse state and previous dimensions
+  collapsed?: boolean;
+  prevW?: number;
+  prevH?: number;
 }
 
 // Optional: A default layout when none is saved yet.
@@ -36,6 +39,10 @@ export function useDashboardWidgets(dashboardId: string) {
         widgetName: existingItem ? existingItem.widgetName : mapping.defaultName,
         // Include minW if defined in the widget mapping.
         ...(mapping.defaultLayout.minW ? { minW: mapping.defaultLayout.minW } : {}),
+        // Persist collapse state if already set.
+        collapsed: existingItem?.collapsed,
+        prevW: existingItem?.prevW,
+        prevH: existingItem?.prevH,
       } as WidgetLayout;
     });
     setLayout(dashboardId, updatedLayout);
@@ -57,8 +64,8 @@ export function useDashboardWidgets(dashboardId: string) {
       y: Infinity, // pushes the widget to the bottom
       w: mapping.defaultLayout.w,
       h: mapping.defaultLayout.h,
-      // Add minW to ensure, for example, table widgets cannot be resized below 3.
       ...(mapping.defaultLayout.minW ? { minW: mapping.defaultLayout.minW } : {}),
+      collapsed: false,
     };
     setLayout(dashboardId, [...currentLayout, newItem]);
   };
@@ -75,5 +82,38 @@ export function useDashboardWidgets(dashboardId: string) {
     setLayout(dashboardId, newLayout);
   };
 
-  return { currentLayout, onLayoutChange, addWidget, deleteWidget, renameWidget };
+  // New: update layout dimensions and persist collapse state.
+  const collapseWidget = (widgetId: string, collapsed: boolean) => {
+    const updatedLayout = currentLayout.map((widget) => {
+      if (widget.i === widgetId) {
+        if (collapsed && !widget.collapsed) {
+          // When collapsing, save current dimensions and set to 1×1.
+          return {
+            ...widget,
+            prevW: widget.w,
+            prevH: widget.h,
+            collapsed: true,
+            w: 2,
+            h: 1,
+          };
+        }
+        if (!collapsed && widget.collapsed) {
+          // When expanding, restore previous dimensions if available.
+          const mapping = widgetMappings[widget.widgetType] || { defaultLayout: { w: 6, h: 4 } };
+          return {
+            ...widget,
+            collapsed: false,
+            w: widget.prevW || mapping.defaultLayout.w,
+            h: widget.prevH || mapping.defaultLayout.h,
+            prevW: undefined,
+            prevH: undefined,
+          };
+        }
+      }
+      return widget;
+    });
+    setLayout(dashboardId, updatedLayout);
+  };
+
+  return { currentLayout, onLayoutChange, addWidget, deleteWidget, renameWidget, collapseWidget };
 }

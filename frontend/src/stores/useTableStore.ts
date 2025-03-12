@@ -16,7 +16,7 @@ interface TableStore {
   ) => void;
 }
 
-export const useTableStore = create<TableStore>(
+export const useTableStore = create<TableStore, [["zustand/persist", TableStore]]>(
   persist(
     (set) => ({
       tables: {},
