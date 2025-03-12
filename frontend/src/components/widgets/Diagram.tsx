@@ -1,14 +1,17 @@
-// src/components/ChartComponent.tsx
+// src/components/DiagramComponent.tsx
 import React from 'react';
 
 import '../../assets/css/widget.css';
 
 
+export interface DiagramComponentProps {
+  widgetId: string;
+}
 
-const DiagramComponent: React.FC = () => {
+const DiagramComponent: React.FC<DiagramComponentProps> = ({ widgetId }) => {
   return (
     <div className="widget">
-      <p className="text-center">Chart Component</p>
+      <p className="text-center">Diagram Component</p>
     </div>
   );
 };

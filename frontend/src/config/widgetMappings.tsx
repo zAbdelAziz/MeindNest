@@ -10,14 +10,13 @@ import EmailComponent from '../components/widgets/Email';
 import FileExplorerComponent from '../components/widgets/FileExplorer';
 import DiagramComponent from '../components/widgets/Diagram';
 
-// Import the icons used in the dropdown
 import { FaChartPie, FaTable, FaTimeline, FaCalendarDays, FaFolderOpen, FaDiagramProject } from 'react-icons/fa6';
 import { LuListTodo, LuText, LuMail } from 'react-icons/lu';
 
 export interface WidgetConfig {
   component: React.FC;
   defaultName: string;
-  defaultLayout: { w: number; h: number };
+  defaultLayout: { w: number; h: number; minW?: number }; // add optional minW here
   icon: React.ReactNode;
 }
 
@@ -31,7 +30,7 @@ export const widgetMappings: Record<string, WidgetConfig> = {
   table: {
     component: TableComponent,
     defaultName: 'Table Widget',
-    defaultLayout: { w: 6, h: 4 },
+    defaultLayout: { w: 6, h: 5, minW: 3 },
     icon: <FaTable />,
   },
   todo: {

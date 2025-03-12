@@ -8,6 +8,8 @@ export type WidgetType = keyof typeof widgetMappings | string;
 export interface WidgetLayout extends Layout {
   widgetType: WidgetType;
   widgetName: string;
+  // Optionally, react-grid-layout supports minW, maxW, etc.
+  minW?: number;
 }
 
 // Optional: A default layout when none is saved yet.
@@ -25,15 +27,19 @@ export function useDashboardWidgets(dashboardId: string) {
   const onLayoutChange = (layout: Layout[]) => {
     const updatedLayout = layout.map((item) => {
       const existingItem = currentLayout.find((x) => x.i === item.i);
+      const widgetType = existingItem ? existingItem.widgetType : 'chart';
+      const mapping = widgetMappings[widgetType] || { defaultLayout: { w: 6, h: 4 } };
+
       return {
         ...item,
-        widgetType: existingItem ? existingItem.widgetType : 'chart',
-        widgetName: existingItem ? existingItem.widgetName : 'Chart Widget',
+        widgetType,
+        widgetName: existingItem ? existingItem.widgetName : mapping.defaultName,
+        // Include minW if defined in the widget mapping.
+        ...(mapping.defaultLayout.minW ? { minW: mapping.defaultLayout.minW } : {}),
       } as WidgetLayout;
     });
     setLayout(dashboardId, updatedLayout);
   };
-
 
   // Updated addWidget: accepts an optional options object containing a title.
   const addWidget = (widgetType: WidgetType, options?: { title: string }) => {
@@ -51,6 +57,8 @@ export function useDashboardWidgets(dashboardId: string) {
       y: Infinity, // pushes the widget to the bottom
       w: mapping.defaultLayout.w,
       h: mapping.defaultLayout.h,
+      // Add minW to ensure, for example, table widgets cannot be resized below 3.
+      ...(mapping.defaultLayout.minW ? { minW: mapping.defaultLayout.minW } : {}),
     };
     setLayout(dashboardId, [...currentLayout, newItem]);
   };

@@ -29,7 +29,6 @@ import { LuListTodo, LuText, LuMail } from "react-icons/lu";
 
 const ResponsiveGridLayout = WidthProvider(GridLayout);
 
-// Render a widget by looking up its component from the mapping.
 const renderWidget = (
   widget: WidgetLayout,
   deleteWidget: (widgetId: string) => void,
@@ -48,7 +47,8 @@ const renderWidget = (
         onDelete={() => deleteWidget(widget.i)}
         onRename={(newName: string) => renameWidget(widget.i, newName)}
       >
-        <WidgetComponent />
+        {/* Pass widgetId prop to all widget components */}
+        <WidgetComponent widgetId={widget.i} />
       </DraggableWidget>
     </div>
   );

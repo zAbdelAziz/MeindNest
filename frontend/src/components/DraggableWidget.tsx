@@ -12,6 +12,7 @@ interface DraggableWidgetProps {
   children: React.ReactNode;
   onDelete?: () => void;
   onRename?: (newName: string) => void;
+  headerActions?: React.ReactNode; // New prop for extra header buttons
 }
 
 const DraggableWidget: React.FC<DraggableWidgetProps> = ({
@@ -20,6 +21,7 @@ const DraggableWidget: React.FC<DraggableWidgetProps> = ({
   children,
   onDelete,
   onRename,
+  headerActions,
 }) => {
   const [name, setName] = useState(widgetName);
   const [isEditing, setIsEditing] = useState(false);
@@ -52,7 +54,9 @@ const DraggableWidget: React.FC<DraggableWidgetProps> = ({
             <span className="text-sm">{name}</span>
           )}
         </div>
-        <div className="flex-none">
+        <div className="flex-none flex items-center space-x-2">
+          {/* Render additional header actions if provided */}
+          {headerActions}
           {isEditing ? (
             <div className="flex space-x-2">
               <button onClick={handleRename} className="text-blue-500">
