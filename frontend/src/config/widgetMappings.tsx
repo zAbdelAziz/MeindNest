@@ -31,7 +31,7 @@ export const widgetMappings: Record<string, WidgetConfig> = {
   table: {
     component: TableComponent,
     defaultName: 'Table Widget',
-    defaultLayout: { w: 6, h: 5, minW: 3 },
+    defaultLayout: { w: 6, h: 6, minW: 3 },
     icon: <FaTable />,
   },
   todo: {

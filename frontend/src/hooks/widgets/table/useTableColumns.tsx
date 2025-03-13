@@ -1,4 +1,3 @@
-// src/hooks/useTableColumns.ts
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { TableData } from '../../../stores/useTableStore';
@@ -14,6 +13,7 @@ interface UseTableColumnsProps {
   setTableData: (widgetId: string, updater: ((prev: TableData) => TableData) | TableData) => void;
   selectedColumns: number[];
   setSelectedColumns: React.Dispatch<React.SetStateAction<number[]>>;
+  hoveredColumn: number | null;
 }
 
 export const useTableColumns = ({
@@ -26,6 +26,7 @@ export const useTableColumns = ({
   setTableData,
   selectedColumns,
   setSelectedColumns,
+  hoveredColumn,
 }: UseTableColumnsProps): ColumnDef<Record<string, string>>[] => {
   return React.useMemo(() => {
     return tableData.headers.map((header, colIndex) => ({
@@ -33,19 +34,21 @@ export const useTableColumns = ({
       accessorKey: `col${colIndex}`,
       header: () => (
         <div className="flex items-center">
-          <input
-            type="checkbox"
-            checked={selectedColumns.includes(colIndex)}
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedColumns((prev) =>
-                prev.includes(colIndex)
-                  ? prev.filter((c) => c !== colIndex)
-                  : [...prev, colIndex]
-              );
-            }}
-            onChange={() => {}}
-          />
+          <div className={`${hoveredColumn === colIndex ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
+            <input
+              type="checkbox"
+              checked={selectedColumns.includes(colIndex)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedColumns((prev) =>
+                  prev.includes(colIndex)
+                    ? prev.filter((c) => c !== colIndex)
+                    : [...prev, colIndex]
+                );
+              }}
+              onChange={() => {}}
+            />
+          </div>
           <div
             onClick={() => {
               setEditingCell({ row: -1, col: colIndex });
@@ -82,7 +85,7 @@ export const useTableColumns = ({
                 autoFocus
               />
             ) : (
-              header
+              header || <span className="text-gray-400">&nbsp;</span>
             )}
           </div>
         </div>
@@ -134,7 +137,7 @@ export const useTableColumns = ({
             }}
             className="cursor-pointer p-0"
           >
-            {cellValue}
+            {cellValue ? cellValue : <span className="text-gray-400">&nbsp;</span>}
           </div>
         );
       },
@@ -149,5 +152,6 @@ export const useTableColumns = ({
     widgetId,
     selectedColumns,
     setSelectedColumns,
+    hoveredColumn,
   ]);
 };

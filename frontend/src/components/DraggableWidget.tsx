@@ -55,7 +55,7 @@ const DraggableWidget: React.FC<DraggableWidgetProps> = ({
 			{/* Header */}
 			<div
 				className={`p-1 flex items-center justify-between bg-slate-300/10 dark:bg-stone-900/10 ${
-					collapsed ? 'py-0 border-t border-gray-500' : ''
+					collapsed ? 'py-0 border-y border-gray-500' : ''
 				}`}
 			>
 				<div className="flex items-center flex-grow">
@@ -138,9 +138,9 @@ const DraggableWidget: React.FC<DraggableWidgetProps> = ({
 					)}
 				</div>
 			</div>
-			<hr className="text-gray-500" />
+			{/*<hr className="text-gray-500" />*/}
 			{!collapsed && (
-				<div className="flex-1 overflow-hidden bg-zinc-200/15 dark:bg-neutral-800/10 p-2 group-hover:overflow-auto scrollbar [scrollbar-gutter:stable]">
+				<div className="flex-1 overflow-hidden bg-zinc-200/15 dark:bg-neutral-800/20 border-y border-gray-500 p-2 group-hover:overflow-auto scrollbar [scrollbar-gutter:stable]">
 					{children}
 				</div>
 			)}
