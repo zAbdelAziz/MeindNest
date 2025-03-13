@@ -140,7 +140,7 @@ const DraggableWidget: React.FC<DraggableWidgetProps> = ({
 			</div>
 			{/*<hr className="text-gray-500" />*/}
 			{!collapsed && (
-				<div className="flex-1 overflow-hidden bg-zinc-200/15 dark:bg-neutral-800/20 border-y border-gray-500 p-2 group-hover:overflow-auto scrollbar [scrollbar-gutter:stable]">
+				<div className="flex-1 overflow-hidden bg-zinc-200/15 dark:bg-neutral-800/20 border-y border-neutral-400 dark:border-neutral-700 p-2 group-hover:overflow-auto scrollbar [scrollbar-gutter:stable]">
 					{children}
 				</div>
 			)}
