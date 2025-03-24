@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-table';
 import { useTableStore, TableData } from '../../stores/useTableStore';
 import { useInitializeTable } from '../../hooks/widgets/table/useInitializeTable';
+import { useEditableCell } from '../../hooks/widgets/table/useEditableCell';
 import { useTableColumns } from '../../hooks/widgets/table/useTableColumns';
 import { useTableResizing } from '../../hooks/widgets/table/useTableResizing';
 import { useTableActions } from '../../hooks/widgets/table/useTableActions';
@@ -19,11 +20,6 @@ import { MdClose } from 'react-icons/md';
 import { PiDotsThreeVerticalBold } from 'react-icons/pi';
 import FormulaModal from '../modals/tables/FormulaModal';
 import '../../assets/css/widget.css';
-
-import { useTableSelectionStore } from '../../stores/widgets/tables/useTableSelectionStore';
-import { useTableHoverStore } from '../../stores/widgets/tables/useTableHoverStore';
-import { useTableModalStore } from '../../stores/widgets/tables/useTableModalStore';
-import { useEditableCellStore } from '../../stores/widgets/tables/useEditableCellStore';
 
 export interface TableComponentProps {
   widgetId: string;
@@ -43,25 +39,30 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
   // Initialize table data.
   const tableData = useInitializeTable(widgetId, defaultTableData);
 
-  // Use Zustand stores for selection, hover, modals, and inline editing.
-  const { selectedRows, setSelectedRows, selectedColumns, setSelectedColumns } = useTableSelectionStore();
-  const { hoveredRow, hoveredColumn, setHoveredRow, setHoveredColumn } = useTableHoverStore();
-  const {
-    isAddColumnModalOpen,
-    openAddColumnModal,
-    closeAddColumnModal,
-    rowToDelete,
-    setRowToDelete,
-    colToDelete,
-    setColToDelete,
-    formulaModalOpen,
-    formulaTarget,
-    openFormulaModal,
-    closeFormulaModal,
-  } = useTableModalStore();
-  const { editingCell, setEditingCell, editingValue, setEditingValue } = useEditableCellStore();
+  // Inline editing state.
+  const { editingCell, setEditingCell, editingValue, setEditingValue } =
+    useEditableCell();
 
-  // Custom hooks.
+  // Selection state.
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [selectedColumns, setSelectedColumns] = useState<number[]>([]);
+
+  // Global hover states.
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
+
+  // Modal states.
+  const [isAddColumnModalOpen, setIsAddColumnModalOpen] = useState(false);
+  const [referenceColumnIndex, setReferenceColumnIndex] = useState<number | null>(null);
+  const [columnInsertPosition, setColumnInsertPosition] = useState<'left' | 'right'>('left');
+  const [rowToDelete, setRowToDelete] = useState<number | null>(null);
+  const [colToDelete, setColToDelete] = useState<number | null>(null);
+
+  // Formula modal state.
+  const [formulaModalOpen, setFormulaModalOpen] = useState(false);
+  const [formulaTarget, setFormulaTarget] = useState<'row' | 'column'>('row');
+
+  // Use custom hooks.
   const { columnWidths, rowHeights, handleColumnResize, handleRowResize } =
     useTableResizing(tableData);
   const {
@@ -84,7 +85,7 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
     });
   }, [tableData]);
 
-  // Get data columns from hook.
+  // Data columns from hook.
   const dataColumns = useTableColumns({
     tableData,
     widgetId,
@@ -103,7 +104,11 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
     id: 'selection',
     header: () => (
       <div style={{ width: columnWidths[0] }} className="flex items-center">
-        <div className={`${hoveredColumn === -1 ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
+        <div
+          className={`${
+            hoveredColumn === -1 ? 'opacity-100' : 'opacity-0'
+          } transition-opacity duration-300`}
+        >
           <input
             type="checkbox"
             checked={selectedRows.length === data.length && data.length > 0}
@@ -121,7 +126,11 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
     ),
     cell: ({ row }) => (
       <div style={{ width: columnWidths[0] }} className="flex items-center w-max">
-        <div className={`${hoveredRow === row.index ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
+        <div
+          className={`${
+            hoveredRow === row.index ? 'opacity-100' : 'opacity-0'
+          } transition-opacity duration-300`}
+        >
           <input
             type="checkbox"
             checked={selectedRows.includes(row.index)}
@@ -135,7 +144,11 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
             onClick={(e) => e.stopPropagation()}
           />
         </div>
-        <div className={`${hoveredRow === row.index ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 ml-1`}>
+        <div
+          className={`${
+            hoveredRow === row.index ? 'opacity-100' : 'opacity-0'
+          } transition-opacity duration-300 ml-1`}
+        >
           <Dropdown
             options={[
               {
@@ -157,7 +170,9 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
     size: columnWidths[0],
   };
 
-  const columns: ColumnDef<Record<string, string>>[] = useMemo(() => [selectionColumn, ...dataColumns], [selectionColumn, dataColumns]);
+  const columns: ColumnDef<Record<string, string>>[] = useMemo(() => {
+    return [selectionColumn, ...dataColumns];
+  }, [selectionColumn, dataColumns]);
 
   const tableInstance = useReactTable({
     data,
@@ -181,7 +196,8 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
       // Vertical aggregation: add a new row.
       setTableData(widgetId, (prev: TableData) => {
         const newRow = prev.headers.map((_, colIndex) => {
-          const shouldOperate = selectedColumns.length > 0 ? selectedColumns.includes(colIndex) : true;
+          const shouldOperate =
+            selectedColumns.length > 0 ? selectedColumns.includes(colIndex) : true;
           if (!shouldOperate) return '';
           const values = prev.rows
             .map((row) => parseFloat(row[colIndex]))
@@ -203,7 +219,10 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
             case 'median': {
               const sorted = [...values].sort((a, b) => a - b);
               const mid = Math.floor(sorted.length / 2);
-              const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+              const median =
+                sorted.length % 2 !== 0
+                  ? sorted[mid]
+                  : (sorted[mid - 1] + sorted[mid]) / 2;
               return median.toString();
             }
             case 'std': {
@@ -223,47 +242,55 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
         const newHeader = operation.charAt(0).toUpperCase() + operation.slice(1);
         const newHeaders = [...prev.headers, newHeader];
         const newRows = prev.rows.map((row, rowIndex) => {
-          if (!selectedRows.includes(rowIndex)) return [...row, ''];
-          const values = row.map((cell) => parseFloat(cell)).filter((val) => !isNaN(val));
-          let agg = '';
-          if (values.length > 0) {
-            switch (operation) {
-              case 'sum':
-                agg = values.reduce((a, b) => a + b, 0).toString();
-                break;
-              case 'average':
-                agg = (values.reduce((a, b) => a + b, 0) / values.length).toString();
-                break;
-              case 'max':
-                agg = Math.max(...values).toString();
-                break;
-              case 'min':
-                agg = Math.min(...values).toString();
-                break;
-              case 'product':
-                agg = values.reduce((a, b) => a * b, 1).toString();
-                break;
-              case 'count':
-                agg = values.length.toString();
-                break;
-              case 'median': {
-                const sorted = [...values].sort((a, b) => a - b);
-                const mid = Math.floor(sorted.length / 2);
-                const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-                agg = median.toString();
-                break;
+          if (!selectedRows.includes(rowIndex)) {
+            return [...row, ''];
+          } else {
+            const values = row
+              .map((cell) => parseFloat(cell))
+              .filter((val) => !isNaN(val));
+            let agg = '';
+            if (values.length > 0) {
+              switch (operation) {
+                case 'sum':
+                  agg = values.reduce((a, b) => a + b, 0).toString();
+                  break;
+                case 'average':
+                  agg = (values.reduce((a, b) => a + b, 0) / values.length).toString();
+                  break;
+                case 'max':
+                  agg = Math.max(...values).toString();
+                  break;
+                case 'min':
+                  agg = Math.min(...values).toString();
+                  break;
+                case 'product':
+                  agg = values.reduce((a, b) => a * b, 1).toString();
+                  break;
+                case 'count':
+                  agg = values.length.toString();
+                  break;
+                case 'median': {
+                  const sorted = [...values].sort((a, b) => a - b);
+                  const mid = Math.floor(sorted.length / 2);
+                  const median =
+                    sorted.length % 2 !== 0
+                      ? sorted[mid]
+                      : (sorted[mid - 1] + sorted[mid]) / 2;
+                  agg = median.toString();
+                  break;
+                }
+                case 'std': {
+                  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+                  const variance = values.reduce((sum, val) => sum + (val - mean) ** 2, 0) / values.length;
+                  agg = Math.sqrt(variance).toString();
+                  break;
+                }
+                default:
+                  agg = '';
               }
-              case 'std': {
-                const mean = values.reduce((a, b) => a + b, 0) / values.length;
-                const variance = values.reduce((sum, val) => sum + (val - mean) ** 2, 0) / values.length;
-                agg = Math.sqrt(variance).toString();
-                break;
-              }
-              default:
-                agg = '';
             }
+            return [...row, agg];
           }
-          return [...row, agg];
         });
         return { headers: newHeaders, rows: newRows };
       });
@@ -289,6 +316,7 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
             const func = new Function(...Object.keys(context), `return ${formulaBody};`);
             const result = func(...Object.values(context));
             return [...row, result.toString()];
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (e) {
             return [...row, 'Error'];
           }
@@ -297,8 +325,8 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
       });
     } else if (target === 'column') {
       setTableData(widgetId, (prev: TableData) => {
-        const newHeader = `Formula (${formula})`;
-        const newHeaders = [...prev.headers, newHeader];
+        // const newHeader = `Formula (${formula})`;
+        // const newHeaders = [...prev.headers, newHeader];
         const newRow = prev.headers.map((_, colIndex) => {
           try {
             const formulaBody = formula.startsWith('=') ? formula.substring(1) : formula;
@@ -310,6 +338,7 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
             const func = new Function(...Object.keys(context), `return ${formulaBody};`);
             const result = func(...Object.values(context));
             return result.toString();
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (e) {
             return 'Error';
           }
@@ -320,20 +349,24 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
   };
 
   const handleConfirmAddColumn = (columnName: string) => {
-    confirmAddColumn(columnName, tableData.headers.length, tableData.headers.length);
-    closeAddColumnModal();
+    confirmAddColumn(columnName, referenceColumnIndex, columnInsertPosition);
+    setIsAddColumnModalOpen(false);
     setSelectedColumns([]);
   };
 
   const handleAddColumnLeft = () => {
     const refIndex = selectedColumns.length > 0 ? Math.min(...selectedColumns) : 0;
-    openAddColumnModal(refIndex, 'left');
+    setReferenceColumnIndex(refIndex);
+    setColumnInsertPosition('left');
+    setIsAddColumnModalOpen(true);
   };
 
   const handleAddColumnRight = () => {
     const refIndex =
       selectedColumns.length > 0 ? Math.min(...selectedColumns) : tableData.headers.length;
-    openAddColumnModal(refIndex, 'right');
+    setReferenceColumnIndex(refIndex);
+    setColumnInsertPosition('right');
+    setIsAddColumnModalOpen(true);
   };
 
   const handleDeleteSelected = () => {
@@ -375,8 +408,9 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
   };
 
   // Open formula modal callback.
-  const openFormulaModalCallback = (target: 'row' | 'column') => {
-    openFormulaModal(target);
+  const openFormulaModal = (target: 'row' | 'column') => {
+    setFormulaTarget(target);
+    setFormulaModalOpen(true);
   };
 
   const visibleRows = tableInstance.getRowModel().rows;
@@ -394,7 +428,7 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
         onAddColumnRight={handleAddColumnRight}
         onExportCSV={handleExportCSV}
         onMathOperation={handleMathOperation}
-        onOpenFormula={openFormulaModalCallback}
+        onOpenFormula={openFormulaModal}
       />
       <div className="h-max overflow-auto scrollbar">
         <table className="min-w-full">
@@ -431,7 +465,7 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
       {isAddColumnModalOpen && (
         <AddColumnModal
           onConfirm={({ columnName }) => handleConfirmAddColumn(columnName)}
-          onCancel={closeAddColumnModal}
+          onCancel={() => setIsAddColumnModalOpen(false)}
         />
       )}
       {rowToDelete !== null && (
@@ -455,9 +489,9 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
           target={formulaTarget}
           onConfirm={(formula, target) => {
             handleApplyFormula(formula, target);
-            closeFormulaModal();
+            setFormulaModalOpen(false);
           }}
-          onCancel={closeFormulaModal}
+          onCancel={() => setFormulaModalOpen(false)}
         />
       )}
     </div>

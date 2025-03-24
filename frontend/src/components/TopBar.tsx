@@ -10,6 +10,8 @@ import { useDashboardStore } from '../stores/useDashboardStore';
 
 import AddNewDashboardModal from './modals/AddNewDashboardModal';
 
+import NotificationsDropdown from './NotificationsDropdown';
+
 import {
 	MdLightMode,
 	MdDarkMode,
@@ -53,47 +55,49 @@ const TopBar: React.FC<TopBarProps> = ({ toggleSidebarWidth, sideBarExpanded }) 
 		}
 	};
 
-	return (
-		<div className="flex justify-between items-center bg-neutral-400 dark:bg-neutral-800 p-2">
+  return (
+    <div className="flex justify-between items-center bg-neutral-400 dark:bg-neutral-800 p-2">
+      {/* Left section for sidebar and dashboard controls */}
+      <div className="p-2 flex space-x-2">
+        {/* Sidebar toggle and add dashboard buttons */}
+        <button onClick={toggleSidebarWidth} className="rounded-full text-xl text-slate-600 p-1 mx-1" title="Toggle Menu">
+          {sideBarExpanded ? <MdOutlineKeyboardDoubleArrowRight /> : <MdOutlineKeyboardDoubleArrowLeft />}
+        </button>
+        <button onClick={openNewDashboard} className="rounded-full text-xl text-slate-600 p-1 mx-1" title="Create New Dashboard">
+          <MdAdd />
+        </button>
+      </div>
 
-			<div className="p-2">
-				{/* Sidebar toggle */}
-				<button onClick={toggleSidebarWidth} className="rounded-full text-xl text-slate-600 p-1 mx-1" title="Toggle Menu">
-					{sideBarExpanded ? < MdOutlineKeyboardDoubleArrowRight/> : < MdOutlineKeyboardDoubleArrowLeft/>}
-				</button>
+      {/* Center: Page Title */}
+      <div className="p-2 flex items-center space-x-4">
+        <p className="text-lg font-semibold">{pageTitle}</p>
+      </div>
 
-				{/*Add Dashboard*/}
-				<button onClick={openNewDashboard} className="rounded-full text-xl  text-slate-600 p-1 mx-1" title="Create New Dashboard">
-					<MdAdd />
-				</button>
-			</div>
+      {/* Right: Notifications, dark mode, delete dashboard */}
+      <div className="p-2 flex items-center space-x-4">
+        <NotificationsDropdown />
+        <button onClick={toggleDarkMode} className="rounded-full text-xl text-slate-600 p-1">
+          {darkMode ? <MdLightMode /> : <MdDarkMode />}
+        </button>
+        {dashboardId && (
+          <button onClick={handleDeleteDashboard} className="rounded-full text-xl text-red-900 p-1" title="Delete Dashboard">
+            <MdClose />
+          </button>
+        )}
+      </div>
 
-			{/* Title and dashboard controls */}
-			<div className="p-2 flex items-center space-x-4">
-				<p className="text-lg font-semibold">{pageTitle}</p>
-			</div>
-
-			<div className="p-2">
-				{/* Dark mode toggle */}
-				<button onClick={toggleDarkMode} className="rounded-full text-xl text-slate-600 p-1">
-					{darkMode ? <MdLightMode /> : <MdDarkMode />}
-				</button>
-
-				{/*Delete Dashboard*/}
-				{dashboardId && (
-					<button onClick={handleDeleteDashboard} className="rounded-full text-xl text-red-900 p-1" title="Delete Dashboard">
-						<MdClose />
-					</button>
-				)}
-
-			</div>
-
-			{/* Input Modal for adding new dashboard */}
-			{showNewDashboardModal && (
-				<AddNewDashboardModal message="Enter the name for the new dashboard:" placeholder="Dashboard name" onCancel={cancelNewDashboard} onConfirm={confirmNewDashboard}/>
-			)}
-		</div>
-	);
+      {/* New Dashboard Modal */}
+      {showNewDashboardModal && (
+        <AddNewDashboardModal
+          message="Enter the name for the new dashboard:"
+          placeholder="Dashboard name"
+          onCancel={cancelNewDashboard}
+          onConfirm={confirmNewDashboard}
+        />
+      )}
+    </div>
+  );
 };
+
 
 export default TopBar;

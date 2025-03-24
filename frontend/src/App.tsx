@@ -2,8 +2,11 @@
 import { BrowserRouter as Router } from 'react-router-dom';
 import Layout from './components/Layout';
 import './assets/css/main.css';
+
 import { useSidebarStore } from './stores/useSidebarStore';
 import { useSidebarDrag } from './hooks/useSidebarDrag';
+
+import { useNotificationsSSE } from './hooks/useNotificationsSSE';
 
 function App() {
 
@@ -11,6 +14,8 @@ function App() {
   const sidebarWidth = useSidebarStore((state) => state.sidebarWidth);
   const sideBarExpanded = useSidebarStore((state) => state.sideBarExpanded);
   const toggleSidebarWidth = useSidebarStore((state) => state.toggleSidebarWidth);
+
+    useNotificationsSSE();
 
   // Retrieve mouse event handlers from our custom drag hook
   const { handleMouseDown } = useSidebarDrag();
