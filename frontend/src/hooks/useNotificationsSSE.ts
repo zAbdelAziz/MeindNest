@@ -7,7 +7,7 @@ export const useNotificationsSSE = () => {
 
   useEffect(() => {
     // Adjust the endpoint URL to your backend SSE notifications endpoint
-    const eventSource = new EventSource('http://localhost:5000/sse/notifications?user_id=12345');
+    const eventSource = new EventSource('http://localhost:12850/sse/notifications?user_id=12345');
 
     eventSource.onmessage = (event) => {
       try {
