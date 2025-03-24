@@ -1,2 +1,2 @@
 # MeindNest
-Virtual open souce working space to organize your life
+Virtual open souce working space, with generic functionalities
