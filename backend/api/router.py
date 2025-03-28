@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from api.handlers.notifications import NotificationHandlers
+from api.handlers.tables import TablesHandler
 
 
 class Router(APIRouter):
@@ -16,6 +17,9 @@ class Router(APIRouter):
 		self.add_api_route(self.notifications['path'], self.notifications['handler'], methods=self.notifications['methods'])
 		self.add_api_route(self.mark_notification_read['path'], self.mark_notification_read['handler'], methods=self.mark_notification_read['methods'])
 
+		# Widgets
+		self.add_api_route(self.table_save['path'], self.table_save['handler'], methods=self.table_save['methods'])
+
 	# Notifications
 	@property
 	def notify(self):
@@ -28,3 +32,7 @@ class Router(APIRouter):
 	@property
 	def mark_notification_read(self):
 		return {'path': '/notifications/read', 'methods': ['POST'], 'handler': NotificationHandlers.mark_notifications_read}
+
+	@property
+	def table_save(self):
+		return {'path': '/widgets/tables/save-table', 'methods': ['POST'], 'handler': TablesHandler.save_table}

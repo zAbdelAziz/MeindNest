@@ -3,8 +3,9 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from structures.services.api import ServiceStruct
+from config import Config
 from api.router import Router
+from structures.services.api import ServiceStruct
 
 
 class APIService(ServiceStruct):
@@ -20,6 +21,7 @@ class APIService(ServiceStruct):
 
 		self.app.notify = self._notify_user
 		self.app.subscribers = self.subscribers
+		self.app.config = Config()
 
 	def start(self):
 		"""

@@ -75,13 +75,13 @@ const NotificationsDropdown: React.FC = () => {
           />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-red-100 bg-red-600 rounded-full">
+          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold text-red-100 bg-red-900 rounded-full">
             {unreadCount}
           </span>
         )}
       </button>
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-md shadow-lg overflow-hidden z-20">
+        <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-neutral-800  shadow-lg overflow-hidden z-20">
           <ul className="py-1">
             {displayedNotifications.length ? (
               displayedNotifications.map((notification) => (
@@ -102,7 +102,7 @@ const NotificationsDropdown: React.FC = () => {
                   </div>
                   <div className="flex items-center">
                     {!notification.read && (
-                      <MdFiberManualRecord className="text-blue-500 mr-1" size={10} />
+                      <MdFiberManualRecord className="text-red-900 mr-1" size={10} />
                     )}
                     <p className="text-sm text-gray-700 dark:text-gray-300">
                       {notification.message}

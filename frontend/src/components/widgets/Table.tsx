@@ -10,6 +10,7 @@ import { useEditableCell } from '../../hooks/widgets/table/useEditableCell';
 import { useTableColumns } from '../../hooks/widgets/table/useTableColumns';
 import { useTableResizing } from '../../hooks/widgets/table/useTableResizing';
 import { useTableActions } from '../../hooks/widgets/table/useTableActions';
+import { useSyncTableData } from '../../hooks/widgets/table/useSyncTableData';
 import TableMenu from './tables/TableMenu';
 import AddColumnModal from '../modals/tables/AddColumnModal';
 import DeleteConfirmationModal from '../modals/tables/DeleteConfirmationModal';
@@ -61,6 +62,9 @@ const TableComponent: React.FC<TableComponentProps> = ({ widgetId }) => {
   // Formula modal state.
   const [formulaModalOpen, setFormulaModalOpen] = useState(false);
   const [formulaTarget, setFormulaTarget] = useState<'row' | 'column'>('row');
+
+  // This hook will sync the table data to your API whenever it changes.
+  useSyncTableData(widgetId);
 
   // Use custom hooks.
   const { columnWidths, rowHeights, handleColumnResize, handleRowResize } =
